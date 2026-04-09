@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 40 33% 98%;
+    --foreground: 150 10% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 150 10% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 150 10% 15%;
+
+    --primary: 125 52% 33%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 36 33% 94%;
+    --secondary-foreground: 150 10% 15%;
+
+    --muted: 40 20% 94%;
+    --muted-foreground: 150 5% 45%;
+
+    --accent: 36 60% 92%;
+    --accent-foreground: 150 10% 15%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 40 15% 90%;
+    --input: 40 15% 90%;
+    --ring: 125 52% 33%;
+
+    --radius: 1rem;
+
+    --success: 125 52% 33%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 150 10% 25%;
+    --sidebar-primary: 125 52% 33%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 125 30% 95%;
+    --sidebar-accent-foreground: 125 52% 25%;
+    --sidebar-border: 40 15% 92%;
+    --sidebar-ring: 125 52% 33%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer utilities {
+  .hover-lift {
+    @apply transition-all duration-300 ease-out;
+  }
+  .hover-lift:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px -8px hsl(var(--primary) / 0.15);
+  }
+
+  .glass {
+    backdrop-filter: blur(12px);
+    background: hsl(var(--background) / 0.8);
+  }
+
+  .badge-organic {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(125 40% 92%);
+    color: hsl(125 52% 28%);
+  }
+
+  .badge-verified {
+    @apply inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium;
+    background: hsl(210 80% 92%);
+    color: hsl(210 80% 35%);
+  }
+}
