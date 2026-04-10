@@ -112,6 +112,30 @@ interface AuthResponse {
   token: string;
 }
 
+function createLocalGuestAuthResponse(role: "guest" | "seller"): AuthResponse {
+  if (role === "seller") {
+    return {
+      user: {
+        userId: "seller_guest_local",
+        name: "Demo Seller",
+        email: "seller@freshfarm.local",
+        role: "seller",
+      },
+      token: "seller-demo-token",
+    };
+  }
+
+  return {
+    user: {
+      userId: "guest_local",
+      name: "Guest User",
+      email: "guest@freshfarm.local",
+      role: "guest",
+    },
+    token: "guest-token",
+  };
+}
+
 export async function login(email: string, password: string) {
   return request<AuthResponse>("/auth/login", {
     method: "POST",
@@ -127,15 +151,23 @@ export async function signup(name: string, email: string, password: string) {
 }
 
 export async function guestLogin() {
-  return request<AuthResponse>("/auth/guest", {
-    method: "POST",
-  });
+  try {
+    return await request<AuthResponse>("/auth/guest", {
+      method: "POST",
+    });
+  } catch {
+    return createLocalGuestAuthResponse("guest");
+  }
 }
 
 export async function sellerGuestLogin() {
-  return request<AuthResponse>("/auth/seller-guest", {
-    method: "POST",
-  });
+  try {
+    return await request<AuthResponse>("/auth/seller-guest", {
+      method: "POST",
+    });
+  } catch {
+    return createLocalGuestAuthResponse("seller");
+  }
 }
 
 export async function getCart(userId?: string) {
