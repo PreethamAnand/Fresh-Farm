@@ -120,6 +120,21 @@ function requireAuth(req, res, next) {
   }
 }
 
+// Middleware to convert "me" to actual userId in route params
+function resolveUserIdMiddleware(req, res, next) {
+  if (req.params.userId === "me" && req.auth) {
+    req.params.userId = req.auth.userId;
+  }
+  next();
+}
+
+// Apply resolver to all user-specific routes after auth
+app.use("/api/cart", requireAuth, resolveUserIdMiddleware);
+app.use("/api/favorites", requireAuth, resolveUserIdMiddleware);
+app.use("/api/orders", requireAuth, resolveUserIdMiddleware);
+app.use("/api/chat", requireAuth, resolveUserIdMiddleware);
+app.use("/api/seller", requireAuth, resolveUserIdMiddleware);
+
 function enforceUserAccess(req, res) {
   const requestedUserId = req.params.userId ?? req.body?.userId;
   if (!requestedUserId) {
