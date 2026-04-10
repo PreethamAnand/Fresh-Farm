@@ -22,6 +22,60 @@ app.use(express.json());
 
 let db;
 
+// Fallback in-memory storage for demo mode when MongoDB is unavailable
+const inMemoryCollections = {
+  users: [],
+  sellerProducts: [],
+  sellerOrders: [],
+  carts: [],
+  orders: [],
+  favorites: [],
+  conversations: [],
+  messages: [],
+};
+
+// Helper function to get collection with fallback to in-memory storage
+function getCollection(collectionName) {
+  if (db) {
+    return db.collection(collectionName);
+  }
+  // Return a mock collection interface for in-memory operations
+  return {
+    findOne: async (query) => inMemoryCollections[collectionName]?.find(doc => {
+      return Object.entries(query).every(([k, v]) => doc[k] === v);
+    }) || null,
+    find: async (query = {}) => ({
+      toArray: async () => inMemoryCollections[collectionName]?.filter(doc => {
+        return Object.entries(query).every(([k, v]) => doc[k] === v);
+      }) || [],
+    }),
+    insertOne: async (doc) => {
+      inMemoryCollections[collectionName].push({ _id: new Date().getTime().toString(), ...doc });
+      return { insertedId: doc._id };
+    },
+    updateOne: async (query, update) => {
+      const idx = inMemoryCollections[collectionName]?.findIndex(doc => 
+        Object.entries(query).every(([k, v]) => doc[k] === v)
+      );
+      if (idx !== -1 && idx !== undefined) {
+        inMemoryCollections[collectionName][idx] = { ...inMemoryCollections[collectionName][idx], ...update.$set };
+        return { modifiedCount: 1 };
+      }
+      return { modifiedCount: 0 };
+    },
+    deleteOne: async (query) => {
+      const idx = inMemoryCollections[collectionName]?.findIndex(doc => 
+        Object.entries(query).every(([k, v]) => doc[k] === v)
+      );
+      if (idx !== -1 && idx !== undefined) {
+        inMemoryCollections[collectionName].splice(idx, 1);
+        return { deletedCount: 1 };
+      }
+      return { deletedCount: 0 };
+    },
+  };
+}
+
 function normalizeEmail(email) {
   return String(email).trim().toLowerCase();
 }
@@ -134,14 +188,14 @@ const defaultMessages = [
 
 function getCollections() {
   return {
-    users: db.collection("users"),
-    carts: db.collection("carts"),
-    orders: db.collection("orders"),
-    sellerOrders: db.collection("sellerOrders"),
-    sellerProducts: db.collection("sellerProducts"),
-    favorites: db.collection("favorites"),
-    conversations: db.collection("conversations"),
-    messages: db.collection("messages"),
+    users: getCollection("users"),
+    carts: getCollection("carts"),
+    orders: getCollection("orders"),
+    sellerOrders: getCollection("sellerOrders"),
+    sellerProducts: getCollection("sellerProducts"),
+    favorites: getCollection("favorites"),
+    conversations: getCollection("conversations"),
+    messages: getCollection("messages"),
   };
 }
 
@@ -1105,11 +1159,23 @@ async function start() {
   }
 
   const client = new MongoClient(uri, { serverSelectionTimeoutMS: 10_000 });
-  await client.connect();
-  db = client.db(DB_NAME);
+  
+  try {
+    await client.connect();
+    db = client.db(DB_NAME);
+    console.log("✅ MongoDB Atlas connected successfully");
+  } catch (mongoError) {
+    console.warn("⚠️ MongoDB connection failed:", mongoError.message);
+    console.log("📦 Starting in DEMO MODE with in-memory data storage (data will not persist)");
+    db = null; // Use in-memory storage via fallback collections
+  }
 
   app.listen(PORT, () => {
-    console.log(`API server running on http://localhost:${PORT}`);
+    console.log(`🚀 API server running on http://localhost:${PORT}`);
+    if (!db) {
+      console.log("   Operating in DEMO MODE - MongoDB unavailable");
+      console.log("   To fix: Check MongoDB Atlas cluster status or network connectivity");
+    }
   });
 }
 
