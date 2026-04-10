@@ -136,6 +136,97 @@ function createLocalGuestAuthResponse(role: "guest" | "seller"): AuthResponse {
   };
 }
 
+// Demo fallback data for deployed environments without backend
+const fallbackSellerProducts: SellerProduct[] = [
+  {
+    id: "demo-1",
+    name: "Fresh Organic Tomatoes",
+    farm: "Fresh Valley Farm",
+    price: 60,
+    unit: "kg",
+    rating: 4.8,
+    image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop",
+    isOrganic: true,
+    isVerified: true,
+    stock: 120,
+    status: "active",
+  },
+  {
+    id: "demo-2",
+    name: "Baby Spinach",
+    farm: "Fresh Valley Farm",
+    price: 45,
+    unit: "250g",
+    rating: 4.6,
+    image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop",
+    isOrganic: true,
+    isVerified: true,
+    stock: 85,
+    status: "active",
+  },
+];
+
+const fallbackSellerStats: SellerStats = {
+  totalOrders: 42,
+  totalRevenue: 8500,
+  activeProducts: 2,
+  rating: 4.7,
+  pendingOrders: 3,
+  completedOrders: 39,
+  totalCustomers: 28,
+};
+
+const fallbackSellerOrders: SellerOrder[] = [
+  {
+    orderId: "ORD-001",
+    buyerName: "Rajesh Kumar",
+    buyerEmail: "rajesh@example.com",
+    date: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    status: "delivered",
+    total: 450,
+    items: [
+      { name: "Fresh Organic Tomatoes", price: 60, qty: 3, image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop" },
+      { name: "Baby Spinach", price: 45, qty: 2, image: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?w=400&h=400&fit=crop" },
+    ],
+  },
+  {
+    orderId: "ORD-002",
+    buyerName: "Priya Singh",
+    buyerEmail: "priya@example.com",
+    date: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString().split("T")[0],
+    status: "in_transit",
+    total: 320,
+    items: [
+      { name: "Fresh Organic Tomatoes", price: 60, qty: 2, image: "https://images.unsplash.com/photo-1592924357228-91a4daadcfea?w=400&h=400&fit=crop" },
+    ],
+  },
+];
+
+const fallbackConversations: Conversation[] = [
+  {
+    id: "conv-1",
+    name: "Rajesh Kumar",
+    farm: "Green Valley Farm",
+    avatar: "🧑‍🌾",
+    lastMessage: "When can you deliver next batch?",
+    time: "2:30 PM",
+    unread: 0,
+    isVerified: true,
+    online: true,
+  },
+  {
+    id: "conv-2",
+    name: "Priya Singh",
+    farm: "Sunrise Organics",
+    avatar: "👩‍🌾",
+    lastMessage: "Product quality is great!",
+    time: "1:15 PM",
+    unread: 1,
+    isVerified: true,
+    online: false,
+  },
+];
+
 export async function login(email: string, password: string) {
   return request<AuthResponse>("/auth/login", {
     method: "POST",
@@ -225,7 +316,12 @@ export async function toggleFavorite(productKey: string, userId?: string) {
 }
 
 export async function getConversations(userId?: string) {
-  return request<{ conversations: Conversation[] }>(`/chat/conversations/${resolveUserPath(userId)}`);
+  try {
+    return await request<{ conversations: Conversation[] }>(`/chat/conversations/${resolveUserPath(userId)}`);
+  } catch {
+    // Return demo conversations when backend unavailable (deployed environments)
+    return { conversations: fallbackConversations };
+  }
 }
 
 export async function getMessages(conversationId: string) {
@@ -310,7 +406,12 @@ export interface SellerMessage {
 }
 
 export async function getSellerProducts(userId?: string) {
-  return request<{ products: SellerProduct[] }>(`/seller/${resolveUserPath(userId)}/products`);
+  try {
+    return await request<{ products: SellerProduct[] }>(`/seller/${resolveUserPath(userId)}/products`);
+  } catch {
+    // Return demo products when backend unavailable (deployed environments)
+    return { products: fallbackSellerProducts };
+  }
 }
 
 export async function addSellerProduct(payload: CreateSellerProductPayload, userId?: string) {
@@ -330,7 +431,12 @@ export async function removeSellerProduct(productId: string, userId?: string) {
 }
 
 export async function getSellerOrders(userId?: string) {
-  return request<{ orders: SellerOrder[] }>(`/seller/${resolveUserPath(userId)}/orders`);
+  try {
+    return await request<{ orders: SellerOrder[] }>(`/seller/${resolveUserPath(userId)}/orders`);
+  } catch {
+    // Return demo orders when backend unavailable (deployed environments)
+    return { orders: fallbackSellerOrders };
+  }
 }
 
 export async function updateSellerOrderStatus(orderId: string, status: string, userId?: string) {
@@ -344,7 +450,12 @@ export async function updateSellerOrderStatus(orderId: string, status: string, u
 }
 
 export async function getSellerStats(userId?: string) {
-  return request<SellerStats>(`/seller/${resolveUserPath(userId)}/stats`);
+  try {
+    return await request<SellerStats>(`/seller/${resolveUserPath(userId)}/stats`);
+  } catch {
+    // Return demo stats when backend unavailable (deployed environments)
+    return fallbackSellerStats;
+  }
 }
 
 export async function getSellerProfile(userId?: string) {
